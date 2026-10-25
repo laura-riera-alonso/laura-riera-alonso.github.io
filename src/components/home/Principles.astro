@@ -1,0 +1,73 @@
+---
+import { home } from "../../i18n/home";
+import type { Lang } from "../../lib/i18n";
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = home[lang].principles;
+---
+
+<section class="container-page principles" aria-labelledby="principles-title">
+  <h2 id="principles-title" class="reveal">{t.title}</h2>
+  <ul>
+    {
+      t.items.map((item, i) => (
+        <li class="reveal" style={`--d: ${i}`}>
+          <h3>{item.title}</h3>
+          <p>{item.body}</p>
+        </li>
+      ))
+    }
+  </ul>
+</section>
+
+<style>
+  .principles {
+    padding-block: clamp(4rem, 9vw, 7rem);
+  }
+  h2 {
+    margin: 0 0 clamp(2rem, 4vw, 3rem);
+    font-size: clamp(1.75rem, 1.2rem + 1.8vw, 2.5rem);
+    font-weight: 600;
+  }
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-bottom: 1px solid var(--line);
+  }
+  li {
+    display: grid;
+    gap: 0.5rem;
+    padding-block: clamp(1.5rem, 3vw, 2.25rem);
+    border-top: 1px solid var(--line);
+  }
+  h3 {
+    margin: 0;
+    font-size: clamp(1.375rem, 1rem + 1.4vw, 2.125rem);
+    font-weight: 560;
+    letter-spacing: -0.028em;
+    line-height: 1.15;
+  }
+  p {
+    margin: 0;
+    max-width: 52ch;
+    color: var(--ink-2);
+  }
+  @media (min-width: 1024px) {
+    li {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: 32px;
+      align-items: baseline;
+    }
+    h3 {
+      grid-column: 1 / span 6;
+    }
+    p {
+      grid-column: 8 / span 5;
+    }
+  }
+</style>

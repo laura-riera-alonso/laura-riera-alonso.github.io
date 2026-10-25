@@ -1,0 +1,61 @@
+---
+import { ui } from "../i18n/ui";
+import { pathFor, type Lang, type PageKey } from "../lib/i18n";
+import { profile } from "../data/perfil";
+
+interface Props {
+  lang: Lang;
+  page: PageKey | "404";
+}
+
+const { lang, page } = Astro.props;
+const t = ui[lang];
+const other: Lang = lang === "es" ? "en" : "es";
+const target: PageKey = page === "404" ? "home" : page;
+const year = new Date().getFullYear();
+---
+
+<footer class="container-page footer">
+  <p>{profile.name}, {year}</p>
+  <ul>
+    <li><a href={profile.repo}>{t.footer.code}</a></li>
+    <li><a href={pathFor(target, other)} hreflang={other} lang={other}>{t.switchTo.label}</a></li>
+  </ul>
+</footer>
+
+<style>
+  .footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem 2rem;
+    padding-block: 2rem 2.5rem;
+    border-top: 1px solid var(--line);
+    font-size: 0.9375rem;
+    color: var(--ink-3);
+  }
+  p {
+    margin: 0;
+  }
+  ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  a {
+    color: var(--ink-2);
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    transition: color 160ms var(--ease-out), text-decoration-color 160ms var(--ease-out);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    a:hover {
+      color: var(--ink);
+      text-decoration-color: currentColor;
+    }
+  }
+</style>

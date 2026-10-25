@@ -1,0 +1,212 @@
+---
+import { Image } from "astro:assets";
+import Icon from "../Icon.astro";
+import { home } from "../../i18n/home";
+import { ui } from "../../i18n/ui";
+import { profile } from "../../data/perfil";
+import { photo, cvFor } from "../../lib/material";
+import type { Lang } from "../../lib/i18n";
+import dashboard from "../../assets/tfm/Resumen.png";
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = home[lang].hero;
+const u = ui[lang];
+const cv = cvFor(lang);
+---
+
+<section class:list={["container-page hero", { "has-photo": photo }]} aria-labelledby="hero-title">
+  <p class="kicker rise" style="--d: 0">
+    <span class="kicker-name">{profile.name}</span>
+    <span class="kicker-role">{profile.role[lang]}</span>
+  </p>
+  <h1 id="hero-title" class="title rise" style="--d: 1">{t.title}</h1>
+
+  <div class="copy rise" style="--d: 2">
+    <p class="sub">{t.sub}</p>
+    <div class="ctas">
+      <a class="btn btn-primary" href="#projects">
+        {t.cta}
+        <Icon name="arrow-down" size={18} class="btn-icon down" />
+      </a>
+      {
+        cv && (
+          <a class="btn btn-secondary" href={cv.href} download>
+            <Icon name="download-simple" size={18} />
+            {cv.lang === lang ? u.cv.download : u.cv.otherLang}
+          </a>
+        )
+      }
+    </div>
+  </div>
+
+  <figure class="visual rise" style="--d: 3">
+    {
+      photo ? (
+        <Image
+          src={photo}
+          alt={t.photoAlt}
+          widths={[360, 540, 720, 960]}
+          sizes="(min-width: 1024px) 380px, 100vw"
+          loading="eager"
+          fetchpriority="high"
+          class="photo"
+        />
+      ) : (
+        <>
+          <div class="frame">
+            <Image
+              src={dashboard}
+              alt={t.figAlt}
+              widths={[480, 720, 960, 1287]}
+              sizes="(min-width: 1240px) 690px, (min-width: 1024px) 56vw, 100vw"
+              loading="eager"
+              fetchpriority="high"
+            />
+          </div>
+          <figcaption class="meta">{t.figCaption}</figcaption>
+        </>
+      )
+    }
+  </figure>
+</section>
+
+<style>
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.25rem;
+    padding-top: clamp(2.5rem, 6vw, 5rem);
+    padding-bottom: clamp(4rem, 9vw, 7.5rem);
+  }
+  .kicker {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.75rem;
+    margin: 0;
+    font-size: 0.9375rem;
+  }
+  .kicker-name {
+    font-weight: 600;
+  }
+  .kicker-role {
+    color: var(--ink-3);
+    padding-left: 0.75rem;
+    border-left: 1px solid var(--line-strong);
+    line-height: 1;
+  }
+  .title {
+    margin: 0.25rem 0 0;
+    font-size: clamp(2.5rem, 1.1rem + 5.2vw, 5.25rem);
+    font-weight: 620;
+    line-height: 1.04;
+    letter-spacing: -0.038em;
+    max-width: 16ch;
+  }
+  .sub {
+    margin: 0;
+    max-width: 38ch;
+    font-size: clamp(1.0625rem, 0.95rem + 0.45vw, 1.25rem);
+    line-height: 1.5;
+    color: var(--ink-2);
+  }
+  .ctas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1.75rem;
+  }
+  .visual {
+    margin: 1.5rem 0 0;
+  }
+  .visual figcaption {
+    margin-top: 0.75rem;
+    max-width: 52ch;
+  }
+  .photo {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+    border-radius: var(--radius);
+  }
+  /* Por debajo de escritorio, el retrato no pasa de un tamaño de retrato: a todo el ancho de una tableta
+     dejaría la portada larguísima. */
+  @media (max-width: 1023px) {
+    .has-photo .visual {
+      max-width: 24rem;
+    }
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .btn:hover :global(.down) {
+      transform: translateY(2px);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .hero {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: 32px;
+      row-gap: 0;
+    }
+    .kicker,
+    .title {
+      grid-column: 1 / span 11;
+    }
+    .title {
+      max-width: none;
+    }
+    .kicker {
+      margin-bottom: 1.25rem;
+    }
+    .copy {
+      grid-column: 1 / span 5;
+      align-self: start;
+      padding-top: 2.75rem;
+    }
+    .visual {
+      grid-column: 6 / span 7;
+      margin-top: 2.75rem;
+    }
+    /* Con foto, el retrato ocupa la columna derecha desde arriba y el titular se encoge lo justo para
+       seguir en dos líneas en 8 columnas (medido con el titular en español, el más largo). */
+    /* La foto es más alta que las tres filas de texto: el sobrante va a la última, no se reparte. */
+    .has-photo {
+      grid-template-rows: auto auto 1fr;
+    }
+    .has-photo .kicker,
+    .has-photo .title {
+      grid-column: 1 / span 8;
+    }
+    .has-photo .title {
+      font-size: clamp(2.5rem, 0.4rem + 4.6vw, 4.2rem);
+    }
+    .has-photo .copy {
+      grid-column: 1 / span 7;
+    }
+    .has-photo .visual {
+      grid-column: 9 / span 4;
+      grid-row: 1 / span 3;
+      margin-top: 0;
+      align-self: start;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .rise {
+      animation: rise 800ms var(--ease-out-expo) both;
+      animation-delay: calc(var(--d, 0) * 80ms + 60ms);
+    }
+    @keyframes rise {
+      from {
+        opacity: 0;
+        transform: translateY(14px);
+      }
+    }
+  }
+</style>

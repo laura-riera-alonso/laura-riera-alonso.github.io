@@ -1,0 +1,122 @@
+---
+import { ui } from "../i18n/ui";
+import { pathFor, type Lang, type PageKey } from "../lib/i18n";
+import { profile } from "../data/perfil";
+
+interface Props {
+  lang: Lang;
+  page: PageKey | "404";
+}
+
+const { lang, page } = Astro.props;
+const t = ui[lang];
+const other: Lang = lang === "es" ? "en" : "es";
+const target: PageKey = page === "404" ? "home" : page;
+const links = [
+  { href: pathFor("home", lang, "#projects"), label: t.nav.projects, wide: true },
+  { href: pathFor("home", lang, "#experience"), label: t.nav.path, wide: true },
+  { href: pathFor("home", lang, "#contact"), label: t.nav.contact, wide: false },
+];
+---
+
+<header class="site-nav">
+  <div class="container-page bar">
+    <a class="brand" href={pathFor("home", lang)}>{profile.shortName}</a>
+    <nav aria-label={t.nav.label}>
+      <ul>
+        {
+          links.map((link) => (
+            <li class:list={{ wide: link.wide }}>
+              <a href={link.href}>{link.label}</a>
+            </li>
+          ))
+        }
+        <li>
+          <a class="lang" href={pathFor(target, other)} hreflang={other} lang={other} title={t.switchTo.title}>
+            <span aria-hidden="true">{t.switchTo.short}</span>
+            <span class="sr-only">{t.switchTo.label}</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<style>
+  .site-nav {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-sticky);
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
+  }
+  @supports (animation-timeline: scroll()) {
+    .site-nav {
+      animation: nav-edge linear both;
+      animation-timeline: scroll();
+      animation-range: 0 64px;
+    }
+    @keyframes nav-edge {
+      from {
+        border-bottom-color: transparent;
+      }
+      to {
+        border-bottom-color: var(--line);
+      }
+    }
+  }
+  .bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    height: 64px;
+  }
+  .brand {
+    font-weight: 650;
+    letter-spacing: -0.02em;
+    font-size: 1.0625rem;
+    text-decoration: none;
+  }
+  ul {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  li a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding-inline: 0.75rem;
+    border-radius: 999px;
+    font-size: 0.9375rem;
+    color: var(--ink-2);
+    text-decoration: none;
+    transition: color 160ms var(--ease-out), background-color 160ms var(--ease-out);
+  }
+  .lang {
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    color: var(--ink);
+    border: 1px solid var(--line-strong);
+    min-height: 36px;
+    margin-left: 0.25rem;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    li a:hover {
+      color: var(--ink);
+      background: var(--bg-2);
+    }
+  }
+  .wide {
+    display: none;
+  }
+  @media (min-width: 640px) {
+    .wide {
+      display: list-item;
+    }
+  }
+</style>

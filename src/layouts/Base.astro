@@ -1,0 +1,106 @@
+---
+import "../styles/global.css";
+import { getImage } from "astro:assets";
+import Nav from "../components/Nav.astro";
+import Footer from "../components/Footer.astro";
+import { ui } from "../i18n/ui";
+import { langs, pathFor, type Lang, type PageKey } from "../lib/i18n";
+import { profile } from "../data/perfil";
+import ogSource from "../assets/tfm/SimulacionClinica.png";
+
+interface Props {
+  lang: Lang;
+  page: PageKey | "404";
+  title: string;
+  description: string;
+  /** Datos estructurados opcionales (JSON-LD). */
+  schema?: Record<string, unknown>;
+}
+
+const { lang, page, title, description, schema } = Astro.props;
+const t = ui[lang];
+const site = Astro.site ?? new URL("https://laura-riera-alonso.github.io");
+const canonical = new URL(Astro.url.pathname, site).href;
+const og = await getImage({ src: ogSource, width: 1200, format: "jpg", quality: 82 });
+const ogUrl = new URL(og.src, site).href;
+---
+
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    {page === "404" && <meta name="robots" content="noindex" />}
+    {page !== "404" && <link rel="canonical" href={canonical} />}
+    {
+      page !== "404" &&
+        langs.map((l) => (
+          <link rel="alternate" hreflang={l} href={new URL(pathFor(page, l), site).href} />
+        ))
+    }
+    {page !== "404" && <link rel="alternate" hreflang="x-default" href={new URL(pathFor(page, "es"), site).href} />}
+    <meta name="theme-color" content="#f4f6f8" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#14181d" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={profile.name} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    {page !== "404" && <meta property="og:url" content={canonical} />}
+    <meta property="og:image" content={ogUrl} />
+    <meta property="og:locale" content={lang === "es" ? "es_ES" : "en_GB"} />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    {schema && <script type="application/ld+json" set:html={JSON.stringify(schema)} />}
+    <script is:inline>document.documentElement.classList.add("js");</script>
+  </head>
+  <body>
+    <a class="skip" href="#main">{t.skip}</a>
+    <Nav lang={lang} page={page} />
+    <main id="main">
+      <slot />
+    </main>
+    <Footer lang={lang} page={page} />
+
+    <script>
+      // Revela los bloques `.reveal` al entrar en pantalla. Sin JS, o con movimiento reducido, ya se ven.
+      const items = document.querySelectorAll<HTMLElement>(".reveal");
+      if ("IntersectionObserver" in window) {
+        const io = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              if (!entry.isIntersecting) continue;
+              entry.target.classList.add("is-in");
+              io.unobserve(entry.target);
+            }
+          },
+          { rootMargin: "0px 0px -10% 0px", threshold: 0.15 },
+        );
+        items.forEach((el) => io.observe(el));
+      } else {
+        items.forEach((el) => el.classList.add("is-in"));
+      }
+    </script>
+  </body>
+</html>
+
+<style>
+  .skip {
+    position: absolute;
+    left: 16px;
+    top: -100px;
+    z-index: var(--z-overlay);
+    padding: 0.75rem 1rem;
+    border-radius: 999px;
+    background: var(--ink);
+    color: var(--bg);
+    font-weight: 550;
+    text-decoration: none;
+  }
+  .skip:focus-visible {
+    top: 12px;
+  }
+</style>

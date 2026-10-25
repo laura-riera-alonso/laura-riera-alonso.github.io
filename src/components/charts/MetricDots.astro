@@ -1,0 +1,279 @@
+---
+// Gráfico de puntos del TFG: una fila por modelo, la media en un punto y, en modo completo, ± desviación
+// típica como bigote. Se destacan solo el modelo elegido y el de mejor métrica (selección de etiquetas).
+import { tfgModels, type TfgModel } from "../../data/resultados";
+import { num, type Lang } from "../../lib/i18n";
+
+interface Props {
+  lang: Lang;
+  metric: "ssim" | "psnr";
+  title: string;
+  /** Compacto: sin bigotes ni etiquetas de grupo (para la home). */
+  compact?: boolean;
+}
+
+const { lang, metric, title, compact = false } = Astro.props;
+
+const domains = { ssim: [55, 85, 5], psnr: [16, 27, 2] } as const;
+const compactDomain = { ssim: [60, 80, 5], psnr: [17, 26, 3] } as const;
+const [min, max, step] = compact ? compactDomain[metric] : domains[metric];
+const ticks: number[] = [];
+for (let v: number = min; v <= max + 1e-9; v += step) ticks.push(v);
+const x = (v: number) => ((Math.min(Math.max(v, min), max) - min) / (max - min)) * 100;
+
+const unit = metric === "ssim" ? "%" : "dB";
+// "%" va con espacio fino en español y pegado en inglés; "dB" siempre con espacio normal.
+const unitSep = metric === "ssim" ? (lang === "es" ? "\u202f" : "") : " ";
+const best = tfgModels.reduce((a, b) => (b[metric].mean > a[metric].mean ? b : a));
+
+const labels: Record<Lang, Record<TfgModel["target"], string>> = {
+  es: { t1c: "T1 con contraste", t1sub: "T1-SUB, pintado", "t1sub-post": "T1-SUB, pintado y postprocesado" },
+  en: { t1c: "Contrast T1", t1sub: "T1-SUB, inpainted", "t1sub-post": "T1-SUB, inpainted and post-processed" },
+};
+const chosenNote = lang === "es" ? "elegido" : "chosen";
+const bestNote = lang === "es" ? "mejor métrica" : "best metric";
+
+function rowLabel(m: TfgModel): string {
+  if (m.target === "t1c") return m.loss.replace(" + local", lang === "es" ? " + pérdida local" : " + local loss");
+  return labels[lang][m.target];
+}
+function value(m: TfgModel): string {
+  const v = m[metric];
+  return `${num(v.mean, lang, 2)} ± ${num(v.sd, lang, 2)}${unitSep}${unit}`;
+}
+function mark(m: TfgModel): string {
+  if (m.chosen) return ` (${chosenNote})`;
+  return m.id === best.id ? ` (${bestNote})` : "";
+}
+const groups = [
+  { id: "t1c", title: lang === "es" ? "Etiqueta: T1 con contraste" : "Target: contrast T1", rows: tfgModels.filter((m) => m.target === "t1c") },
+  { id: "t1sub", title: lang === "es" ? "Etiqueta: T1-SUB (realce)" : "Target: T1-SUB (enhancement)", rows: tfgModels.filter((m) => m.target !== "t1c") },
+];
+// El gráfico es una imagen para los lectores de pantalla: el título y todas las filas, en una sola etiqueta.
+const chartLabel = `${title}. ${groups.flatMap((g) => g.rows).map((m) => `${rowLabel(m)}: ${value(m)}${mark(m)}`).join("; ")}`;
+---
+
+<figure class:list={["dots", { compact }]}>
+  <figcaption class="cap">{title}</figcaption>
+  <div class="chart" role="img" aria-label={chartLabel}>
+    {
+      groups.map((g) => (
+        <div class="group">
+          {!compact && <p class="group-title">{g.title}</p>}
+          {g.rows.map((m) => (
+            <div class:list={["row", { chosen: m.chosen, best: m.id === best.id }]}>
+              <span class="name">
+                {rowLabel(m)}
+                {compact && (m.chosen || m.id === best.id) && (
+                  <span class="note num">
+                    {`${num(m[metric].mean, lang, 2)}${unitSep}${unit}`}, {m.chosen ? chosenNote : bestNote}
+                  </span>
+                )}
+              </span>
+              <span class="plot" aria-hidden="true">
+                {ticks.map((t) => <span class="grid" style={`left: ${x(t)}%`} />)}
+                {!compact && (
+                  <span
+                    class="whisker"
+                    style={`left: ${x(m[metric].mean - m[metric].sd)}%; right: ${100 - x(m[metric].mean + m[metric].sd)}%`}
+                  />
+                )}
+                <span class="dot" style={`left: ${x(m[metric].mean)}%`} />
+                {!compact && <span class="tip" style={`left: ${x(m[metric].mean)}%`}>{value(m)}</span>}
+              </span>
+              <span class="val num" aria-hidden="true">
+                {!compact && (m.chosen || m.id === best.id) ? (
+                  <>
+                    {num(m[metric].mean, lang, 2)}
+                    <span class="note">{m.chosen ? chosenNote : bestNote}</span>
+                  </>
+                ) : null}
+              </span>
+            </div>
+          ))}
+        </div>
+      ))
+    }
+    <div class="axis num" aria-hidden="true">
+      <span class="name" />
+      <span class="plot">
+        {ticks.map((t) => <span class="tick" style={`left: ${x(t)}%`}>{t}</span>)}
+      </span>
+      <span class="val">{unit}</span>
+    </div>
+  </div>
+</figure>
+
+<style>
+  .dots {
+    margin: 0;
+    --label-w: minmax(0, 11rem);
+    --val-w: 5.5rem;
+  }
+  .compact {
+    --label-w: minmax(0, 1fr);
+    --val-w: 0px;
+  }
+  .compact .row,
+  .compact .axis {
+    grid-template-columns: minmax(0, 1fr) 56%;
+  }
+  .compact .val {
+    display: none;
+  }
+  .compact .row {
+    min-height: 40px;
+  }
+  .cap {
+    font-size: 0.875rem;
+    font-weight: 550;
+    color: var(--ink-2);
+    margin-bottom: 1rem;
+  }
+  .chart {
+    display: grid;
+    gap: 0.75rem;
+  }
+  .compact .chart {
+    gap: 0;
+  }
+  .group-title {
+    margin: 0 0 0.25rem;
+    font-size: 0.8125rem;
+    color: var(--ink-3);
+  }
+  .row,
+  .axis {
+    display: grid;
+    grid-template-columns: var(--label-w) minmax(0, 1fr) var(--val-w);
+    column-gap: 0.875rem;
+    align-items: center;
+  }
+  .row {
+    min-height: 32px;
+    border-radius: 6px;
+  }
+  .name {
+    font-size: 0.8125rem;
+    line-height: 1.25;
+    color: var(--ink-2);
+  }
+  .chosen .name {
+    color: var(--ink);
+    font-weight: 550;
+  }
+  .plot {
+    position: relative;
+    height: 24px;
+  }
+  .grid {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: var(--line);
+  }
+  .whisker {
+    position: absolute;
+    top: 50%;
+    height: 2px;
+    margin-top: -1px;
+    border-radius: 1px;
+    background: var(--line-strong);
+  }
+  .dot {
+    position: absolute;
+    top: 50%;
+    width: 12px;
+    height: 12px;
+    margin: -6px 0 0 -6px;
+    border-radius: 50%;
+    background: var(--ink-3);
+    box-shadow: 0 0 0 2px var(--dot-ring, var(--bg));
+  }
+  .chosen .dot {
+    width: 14px;
+    height: 14px;
+    margin: -7px 0 0 -7px;
+    background: var(--accent);
+  }
+  .chosen .whisker {
+    background: color-mix(in oklch, var(--accent), transparent 45%);
+  }
+  .val {
+    display: grid;
+    font-size: 0.8125rem;
+    line-height: 1.2;
+    color: var(--ink);
+  }
+  .note {
+    display: block;
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--ink-3);
+  }
+  .name .note {
+    margin-top: 0.125rem;
+    font-family: var(--font-mono);
+  }
+  .axis {
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+    color: var(--ink-3);
+  }
+  .axis .plot {
+    height: 1rem;
+  }
+  .tick {
+    position: absolute;
+    transform: translateX(-50%);
+  }
+  .axis .val {
+    font-size: 0.75rem;
+    color: var(--ink-3);
+  }
+  /* Tooltip al pasar el ratón: refuerza, nunca es la única vía (los valores están en la etiqueta y en la tabla). */
+  .tip {
+    position: absolute;
+    bottom: calc(100% + 4px);
+    transform: translateX(-50%) translateY(2px);
+    padding: 0.3rem 0.5rem;
+    border-radius: 6px;
+    background: var(--ink);
+    color: var(--bg);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    z-index: var(--z-tooltip);
+    transition: opacity 150ms var(--ease-out), transform 150ms var(--ease-out);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .row:hover {
+      background: color-mix(in oklch, var(--ink), transparent 95%);
+    }
+    .row:hover .tip {
+      opacity: 1;
+      transform: translateX(-50%);
+    }
+  }
+  /* Móvil: el nombre ocupa toda la fila, encima del gráfico y del valor. */
+  @media (max-width: 639px) {
+    .dots:not(.compact) .row,
+    .dots:not(.compact) .axis {
+      grid-template-columns: minmax(0, 1fr) var(--val-w);
+    }
+    .dots:not(.compact) .row {
+      row-gap: 0.25rem;
+      padding-block: 0.25rem;
+    }
+    .dots:not(.compact) .row .name {
+      grid-column: 1 / -1;
+    }
+    .dots:not(.compact) .axis .name {
+      display: none;
+    }
+  }
+</style>

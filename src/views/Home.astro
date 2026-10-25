@@ -1,0 +1,46 @@
+---
+import Base from "../layouts/Base.astro";
+import Hero from "../components/home/Hero.astro";
+import About from "../components/home/About.astro";
+import Projects from "../components/home/Projects.astro";
+import Result from "../components/home/Result.astro";
+import MoreProjects from "../components/home/MoreProjects.astro";
+import Principles from "../components/home/Principles.astro";
+import Timeline from "../components/home/Timeline.astro";
+import Contact from "../components/home/Contact.astro";
+import { home } from "../i18n/home";
+import { profile } from "../data/perfil";
+import type { Lang } from "../lib/i18n";
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = home[lang];
+const schema = {
+  "@context": "https://schema.org",
+  "@type": "Person",
+  name: profile.name,
+  jobTitle: profile.role[lang],
+  email: `mailto:${profile.email}`,
+  alumniOf: [
+    { "@type": "CollegeOrUniversity", name: "Universidad Carlos III de Madrid" },
+    { "@type": "CollegeOrUniversity", name: "EAE Business School" },
+  ],
+  knowsLanguage: ["es", "en", "fr"],
+  worksFor: { "@type": "Organization", name: "AbbVie" },
+  sameAs: [profile.linkedin, profile.github],
+};
+---
+
+<Base lang={lang} page="home" title={t.meta.title} description={t.meta.description} schema={schema}>
+  <Hero lang={lang} />
+  <About lang={lang} />
+  <Projects lang={lang} />
+  <Result lang={lang} />
+  <MoreProjects lang={lang} />
+  <Principles lang={lang} />
+  <Timeline lang={lang} />
+  <Contact lang={lang} />
+</Base>

@@ -1,0 +1,260 @@
+---
+import { Image } from "astro:assets";
+import Icon from "../Icon.astro";
+import MetricDots from "../charts/MetricDots.astro";
+import { home } from "../../i18n/home";
+import { ui } from "../../i18n/ui";
+import { tfmCohort, tfmModels } from "../../data/resultados";
+import { appFeatures } from "../../data/abbvie";
+import { num, pathFor, type Lang } from "../../lib/i18n";
+import simulation from "../../assets/tfm/SimulacionClinica.png";
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = home[lang].projects;
+const u = ui[lang];
+const lasso = tfmModels.find((m) => m.chosen)!;
+const tfmFacts = [
+  `AUC ${num(lasso.auc, lang, 2)}`,
+  lang === "es" ? `${num(tfmCohort.final, lang)} pacientes` : `${num(tfmCohort.final, lang)} patients`,
+  t.tfm.team,
+];
+---
+
+<section id="projects" class="container-page projects" aria-labelledby="projects-title">
+  <header class="head">
+    <h2 id="projects-title" class="reveal">{t.title}</h2>
+    <p class="reveal" style="--d: 1">{t.sub}</p>
+  </header>
+
+  <div class="grid">
+    <article class="project tfm reveal">
+      <div class="frame media">
+        <Image
+          src={simulation}
+          alt={t.tfm.imgAlt}
+          widths={[480, 720, 960, 1272]}
+          sizes="(min-width: 1240px) 680px, (min-width: 1024px) 56vw, 100vw"
+          class="vt-tfm"
+        />
+      </div>
+      <div class="text">
+        <p class="meta">{t.tfm.label}</p>
+        <h3><a class="stretch" href={pathFor("tfm", lang)}>{t.tfm.title}</a></h3>
+        <p class="body">{t.tfm.body}</p>
+        <ul class="facts num">
+          {tfmFacts.map((fact) => <li>{fact}</li>)}
+        </ul>
+        <span class="link-arrow" aria-hidden="true">
+          {u.viewCase}
+          <Icon name="arrow-right" size={18} class="link-arrow-icon" />
+        </span>
+      </div>
+    </article>
+
+    <article class="project tfg reveal" style="--d: 1">
+      <div class="panel media">
+        <MetricDots lang={lang} metric="ssim" title={t.tfg.chartTitle} compact />
+      </div>
+      <div class="text">
+        <p class="meta">{t.tfg.label}</p>
+        <h3><a class="stretch" href={pathFor("tfg", lang)}>{t.tfg.title}</a></h3>
+        <p class="body">{t.tfg.body}</p>
+        <span class="link-arrow" aria-hidden="true">
+          {u.viewCase}
+          <Icon name="arrow-right" size={18} class="link-arrow-icon" />
+        </span>
+      </div>
+    </article>
+
+    <article class="project abbvie reveal">
+      <div class="text">
+        <p class="meta">{t.abbvie.label}</p>
+        <h3><a class="stretch" href={pathFor("abbvie", lang)}>{t.abbvie.title}</a></h3>
+        <p class="body">{t.abbvie.body}</p>
+        <span class="link-arrow" aria-hidden="true">
+          {u.viewCase}
+          <Icon name="arrow-right" size={18} class="link-arrow-icon" />
+        </span>
+      </div>
+      <ul class="features">
+        {
+          appFeatures.map((f) => (
+            <li>
+              <Icon name={f.icon} size={22} />
+              <span>{f.label[lang]}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </article>
+  </div>
+</section>
+
+<style>
+  .projects {
+    padding-block: clamp(4rem, 9vw, 7rem);
+    border-top: 1px solid var(--line);
+  }
+  .head h2 {
+    margin: 0;
+    font-size: clamp(2.25rem, 1.4rem + 3vw, 3.75rem);
+    font-weight: 620;
+    letter-spacing: -0.035em;
+  }
+  .head p {
+    margin: 0.75rem 0 0;
+    max-width: 44ch;
+    color: var(--ink-2);
+    font-size: 1.125rem;
+  }
+  .grid {
+    display: grid;
+    gap: clamp(3.5rem, 7vw, 5rem);
+    margin-top: clamp(2.5rem, 5vw, 4rem);
+  }
+  .project {
+    position: relative;
+    display: grid;
+    gap: 1.5rem;
+    align-content: start;
+  }
+  .text {
+    display: grid;
+    gap: 0.625rem;
+    justify-items: start;
+  }
+  .text .meta {
+    margin: 0;
+  }
+  h3 {
+    margin: 0;
+    font-size: clamp(1.375rem, 1.1rem + 0.9vw, 1.75rem);
+    font-weight: 600;
+    letter-spacing: -0.022em;
+    line-height: 1.18;
+    max-width: 24ch;
+  }
+  h3 a {
+    text-decoration: none;
+  }
+  /* Toda la tarjeta lleva al caso; el foco se ve en el título. */
+  .stretch::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+  }
+  .stretch:focus-visible {
+    outline: none;
+  }
+  .project:has(.stretch:focus-visible) {
+    outline: 2px solid var(--accent);
+    outline-offset: 8px;
+    border-radius: var(--radius);
+  }
+  .body {
+    margin: 0;
+    max-width: 52ch;
+    color: var(--ink-2);
+  }
+  .facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    list-style: none;
+    margin: 0.25rem 0 0.5rem;
+    padding: 0;
+    font-size: 0.8125rem;
+  }
+  .facts li {
+    padding: 0.3rem 0.75rem;
+    border-radius: 999px;
+    background: var(--bg-2);
+    color: var(--ink-2);
+  }
+  .link-arrow {
+    margin-top: 0.5rem;
+  }
+  .media {
+    overflow: hidden;
+  }
+  .media :global(img) {
+    transition: transform 500ms var(--ease-out-expo);
+  }
+  .panel {
+    --dot-ring: var(--bg-2);
+    background: var(--bg-2);
+    border-radius: var(--radius);
+    padding: clamp(1.5rem, 3vw, 2.25rem);
+  }
+  .features {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .features li {
+    display: grid;
+    gap: 0.75rem;
+    align-content: start;
+    padding: 1.25rem;
+    background: var(--bg);
+    font-size: 0.9375rem;
+    line-height: 1.35;
+  }
+  .features :global(.icon) {
+    color: var(--accent-ink);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .project:hover .media :global(img) {
+      transform: scale(1.015);
+    }
+    .project:hover .link-arrow {
+      text-decoration: underline;
+    }
+    .project:hover .link-arrow :global(.link-arrow-icon) {
+      transform: translateX(3px);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .grid {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: 32px;
+      row-gap: 6rem;
+    }
+    .tfm {
+      grid-column: 1 / span 7;
+    }
+    .tfg {
+      grid-column: 8 / span 5;
+      margin-top: 7rem;
+    }
+    .abbvie {
+      grid-column: 1 / -1;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: 32px;
+      align-items: center;
+    }
+    .abbvie .text {
+      grid-column: 1 / span 5;
+    }
+    .abbvie .features {
+      grid-column: 7 / span 6;
+    }
+  }
+
+  .vt-tfm {
+    view-transition-name: tfm-visual;
+  }
+</style>

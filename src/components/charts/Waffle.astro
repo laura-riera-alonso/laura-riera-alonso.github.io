@@ -1,0 +1,239 @@
+---
+// Gráfico de unidades de la simulación del TFM: los mismos 222 pacientes revisados, elegidos por el
+// modelo o al azar. Cada celda es un paciente; en acento, los que tienen insuficiencia renal.
+import { tfmSimulation as sim } from "../../data/resultados";
+import Icon from "../Icon.astro";
+import { ui } from "../../i18n/ui";
+import { num, pct, type Lang } from "../../lib/i18n";
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const u = ui[lang];
+const t = {
+  es: {
+    model: "Según el modelo",
+    random: "Al azar",
+    of: "de",
+    caseKey: "Caso de insuficiencia renal",
+    noCaseKey: "Sin insuficiencia renal",
+    aria: (n: number) => `${n} de ${sim.reviewed} pacientes revisados tienen insuficiencia renal`,
+    note: `Simulación ilustrativa sobre la cohorte de ${num(sim.patients, lang)} pacientes (${num(sim.cases, lang)} casos). Es hipotética: no se midió en práctica clínica. Las tasas (92,5 % en el decil de más riesgo y 31,7 % de base) salen del conjunto de test; las cifras aproximadas de 205 y 70 casos son la extrapolación del TFM al primer decil de la cohorte completa (222 pacientes).`,
+    table: { caption: "Simulación del TFM: casos encontrados según la estrategia de selección", strategy: "Estrategia", reviewed: "Pacientes revisados", found: "Casos encontrados", rate: "Tasa de casos" },
+  },
+  en: {
+    model: "Picked by the model",
+    random: "Picked at random",
+    of: "of",
+    caseKey: "Kidney failure case",
+    noCaseKey: "No kidney failure",
+    aria: (n: number) => `${n} of ${sim.reviewed} reviewed patients have kidney failure`,
+    note: `Illustrative simulation on the ${num(sim.patients, lang)}-patient cohort (${num(sim.cases, lang)} cases). It is hypothetical: it was not measured in clinical practice. The rates (92.5% in the highest-risk decile and a 31.7% base rate) come from the test set; the roughly 205 and 70 cases are the thesis's extrapolation to the first decile of the full cohort (222 patients).`,
+    table: { caption: "Thesis simulation: cases found by selection strategy", strategy: "Strategy", reviewed: "Patients reviewed", found: "Cases found", rate: "Case rate" },
+  },
+}[lang];
+
+const panels = [
+  { id: "model", label: t.model, found: sim.foundByModel, rate: sim.topDecileRate },
+  { id: "random", label: t.random, found: sim.foundAtRandom, rate: sim.baseRate },
+];
+const cells = Array.from({ length: sim.reviewed }, (_, i) => i);
+---
+
+<figure class="waffle">
+  <div class="panels">
+    {
+      panels.map((p) => (
+        <div class:list={["panel", p.id]}>
+          <p class="label">
+            <span class="name">{p.label}</span>
+            <span class="value">
+              <strong>{num(p.found, lang)}</strong> {t.of} {num(sim.reviewed, lang)}
+            </span>
+          </p>
+          <div class="cells reveal" role="img" aria-label={t.aria(p.found)}>
+            {cells.map((i) => (
+              <span class:list={["cell", { on: i < p.found }]} style={i < p.found ? `--i: ${i}` : undefined} />
+            ))}
+          </div>
+        </div>
+      ))
+    }
+  </div>
+  <ul class="legend">
+    <li><span class="key on" />{t.caseKey}</li>
+    <li><span class="key" />{t.noCaseKey}</li>
+  </ul>
+  <figcaption class="meta">{t.note}</figcaption>
+  <details class="data">
+    <summary>
+      {u.showTable}
+      <span class="caret" aria-hidden="true"><Icon name="caret-down" size={18} /></span>
+    </summary>
+    <table>
+      <caption class="sr-only">{t.table.caption}</caption>
+      <thead>
+        <tr><th scope="col">{t.table.strategy}</th><th scope="col">{t.table.reviewed}</th><th scope="col">{t.table.found}</th><th scope="col">{t.table.rate}</th></tr>
+      </thead>
+      <tbody>
+        {
+          panels.map((p) => (
+            <tr><th scope="row">{p.label}</th><td>{num(sim.reviewed, lang)}</td><td>~{num(p.found, lang)}</td><td>{pct(p.rate, lang)}</td></tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </details>
+</figure>
+
+<style>
+  .waffle {
+    margin: 0;
+  }
+  .panels {
+    display: grid;
+    gap: 2.5rem;
+  }
+  .label {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.25rem 1rem;
+    margin: 0 0 0.875rem;
+  }
+  .name {
+    font-weight: 550;
+  }
+  .value {
+    color: var(--ink-2);
+    font-size: 0.9375rem;
+  }
+  .value strong {
+    font-size: clamp(1.75rem, 1.3rem + 1.4vw, 2.5rem);
+    font-weight: 620;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+    margin-right: 0.125rem;
+  }
+  .cells {
+    --cols: 20;
+    display: grid;
+    grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+    gap: 2px;
+  }
+  .cell {
+    aspect-ratio: 1;
+    border-radius: 2px;
+    background: var(--data-muted);
+  }
+  .cell.on {
+    background: var(--accent);
+  }
+  /* Movimiento con sentido: las celdas se llenan en orden para que se vea cuánto concentra el modelo. */
+  @media (prefers-reduced-motion: no-preference) {
+    :global(.js) .cells.reveal {
+      opacity: 1;
+      transform: none;
+    }
+    :global(.js) .cells .cell.on {
+      background: var(--data-muted);
+      transition: background-color 240ms var(--ease-out);
+      transition-delay: calc(var(--i, 0) * 3ms);
+    }
+    :global(.js) .cells.is-in .cell.on {
+      background: var(--accent);
+    }
+  }
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+    list-style: none;
+    margin: 1.5rem 0 0.75rem;
+    padding: 0;
+    font-size: 0.875rem;
+    color: var(--ink-2);
+  }
+  .legend li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .key {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    background: var(--data-muted);
+  }
+  .key.on {
+    background: var(--accent);
+  }
+  figcaption {
+    max-width: 70ch;
+  }
+  .data {
+    margin-top: 1rem;
+    font-size: 0.9375rem;
+  }
+  summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 44px;
+    cursor: pointer;
+    color: var(--accent-ink);
+    font-weight: 550;
+    list-style: none;
+  }
+  summary::-webkit-details-marker {
+    display: none;
+  }
+  .caret {
+    display: inline-flex;
+    transition: transform 200ms var(--ease-out);
+  }
+  details[open] > summary .caret {
+    transform: rotate(180deg);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .caret {
+      transition: none;
+    }
+  }
+  table {
+    border-collapse: collapse;
+    margin-top: 0.5rem;
+    font-variant-numeric: tabular-nums;
+  }
+  th,
+  td {
+    text-align: left;
+    padding: 0.5rem 1.25rem 0.5rem 0;
+    border-bottom: 1px solid var(--line);
+  }
+  thead th {
+    font-weight: 550;
+    color: var(--ink-3);
+    font-size: 0.8125rem;
+  }
+  tbody th {
+    font-weight: 500;
+  }
+  @media (min-width: 768px) {
+    .panels {
+      grid-template-columns: 1fr 1fr;
+      gap: clamp(2rem, 5vw, 4rem);
+    }
+    .cells {
+      --cols: 24;
+    }
+  }
+  @media (min-width: 1024px) {
+    .cells {
+      --cols: 30;
+    }
+  }
+</style>

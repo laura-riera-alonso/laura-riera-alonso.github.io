@@ -1,0 +1,148 @@
+---
+import Icon from "../Icon.astro";
+import { home } from "../../i18n/home";
+import { ui } from "../../i18n/ui";
+import { profile } from "../../data/perfil";
+import type { Lang } from "../../lib/i18n";
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = home[lang].contact;
+const u = ui[lang];
+---
+
+<section id="contact" class="container-page contact" aria-labelledby="contact-title">
+  <h2 id="contact-title" class="reveal">{t.title}</h2>
+
+  <div class="email reveal" style="--d: 1">
+    <a class="address" href={`mailto:${profile.email}`}>{profile.email}</a>
+    <button
+      type="button"
+      class="copy"
+      data-copy={profile.email}
+      data-idle={u.copy.idle}
+      data-done={u.copy.done}
+      data-error={u.copy.error}
+      hidden
+    >
+      <Icon name="copy" size={18} />
+      <span class="copy-label" aria-live="polite">{u.copy.idle}</span>
+    </button>
+  </div>
+
+  <ul class="links reveal" style="--d: 2">
+    <li>
+      <a class="btn btn-secondary" href={profile.linkedin}><Icon name="linkedin-logo" size={18} />LinkedIn</a>
+    </li>
+    <li>
+      <a class="btn btn-secondary" href={profile.github}><Icon name="github-logo" size={18} />GitHub</a>
+    </li>
+  </ul>
+</section>
+
+<script>
+  // Copia el correo. Estados: inactivo, copiado (2 s) y error si el navegador no deja.
+  for (const button of document.querySelectorAll<HTMLButtonElement>("button[data-copy]")) {
+    if (!navigator.clipboard) continue;
+    button.hidden = false;
+    const label = button.querySelector<HTMLElement>(".copy-label")!;
+    let timer: number | undefined;
+    button.addEventListener("click", async () => {
+      window.clearTimeout(timer);
+      try {
+        await navigator.clipboard.writeText(button.dataset.copy!);
+        label.textContent = button.dataset.done!;
+        button.dataset.state = "done";
+      } catch {
+        label.textContent = button.dataset.error!;
+        button.dataset.state = "error";
+      }
+      timer = window.setTimeout(() => {
+        label.textContent = button.dataset.idle!;
+        delete button.dataset.state;
+      }, 2000);
+    });
+  }
+</script>
+
+<style>
+  .contact {
+    padding-block: clamp(4.5rem, 10vw, 8rem);
+    border-top: 1px solid var(--line);
+  }
+  h2 {
+    margin: 0;
+    max-width: 20ch;
+    font-size: clamp(2.25rem, 1.3rem + 3.4vw, 4rem);
+    font-weight: 620;
+    letter-spacing: -0.036em;
+    line-height: 1.06;
+  }
+  .email {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1.25rem;
+    margin-top: clamp(2rem, 4vw, 3rem);
+  }
+  .address {
+    font-size: clamp(1.0625rem, 0.95rem + 0.5vw, 1.375rem);
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    color: var(--accent-ink);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.18em;
+    overflow-wrap: anywhere;
+    transition: text-decoration-color 200ms var(--ease-out);
+  }
+  .copy {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 44px;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--ink-2);
+    font: inherit;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: transform 160ms var(--ease-out), border-color 200ms var(--ease-out), color 200ms var(--ease-out);
+  }
+  .copy[hidden] {
+    display: none;
+  }
+  .copy:active {
+    transform: scale(0.97);
+  }
+  .copy[data-state="done"] {
+    border-color: var(--accent);
+    color: var(--accent-ink);
+  }
+  .copy[data-state="error"] {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .address:hover {
+      text-decoration-color: var(--ink);
+    }
+    .copy:hover {
+      border-color: var(--ink);
+      color: var(--ink);
+    }
+  }
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    list-style: none;
+    margin: 2rem 0 0;
+    padding: 0;
+  }
+</style>

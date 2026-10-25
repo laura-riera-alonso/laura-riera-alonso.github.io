@@ -1,0 +1,97 @@
+---
+import Icon from "../Icon.astro";
+import { home } from "../../i18n/home";
+import { otherProjects } from "../../data/perfil";
+import type { Lang } from "../../lib/i18n";
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = home[lang].more;
+---
+
+<section class="container-page more" aria-labelledby="more-title">
+  <header class="head">
+    <h2 id="more-title" class="reveal">{t.title}</h2>
+    <p class="reveal" style="--d: 1">{t.sub}</p>
+  </header>
+  <ul class="list">
+    {
+      otherProjects.map((p, i) => (
+        <li class="item reveal" style={`--d: ${i}`}>
+          <span class="icon-wrap" aria-hidden="true">
+            <Icon name={p.icon} size={24} />
+          </span>
+          <div class="text">
+            <p class="meta">
+              {p.place[lang]}, {p.year}
+            </p>
+            <h3>{p.title[lang]}</h3>
+            <p class="body">{p.body[lang]}</p>
+          </div>
+        </li>
+      ))
+    }
+  </ul>
+</section>
+
+<style>
+  .more {
+    padding-block: clamp(4rem, 9vw, 7rem);
+  }
+  .head h2 {
+    margin: 0;
+    font-size: clamp(1.75rem, 1.2rem + 1.8vw, 2.5rem);
+    font-weight: 600;
+  }
+  .head p {
+    margin: 0.75rem 0 0;
+    max-width: 52ch;
+    color: var(--ink-2);
+  }
+  .list {
+    display: grid;
+    gap: 2.25rem 48px;
+    list-style: none;
+    margin: clamp(2.25rem, 4vw, 3rem) 0 0;
+    padding: 0;
+  }
+  .item {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr);
+    gap: 1.25rem;
+    align-items: start;
+  }
+  .icon-wrap {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius);
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+  }
+  .text .meta {
+    margin: 0 0 0.375rem;
+  }
+  h3 {
+    margin: 0;
+    font-size: 1.1875rem;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    line-height: 1.25;
+  }
+  .body {
+    margin: 0.5rem 0 0;
+    max-width: 48ch;
+    color: var(--ink-2);
+    font-size: 0.9875rem;
+  }
+  @media (min-width: 768px) {
+    .list {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+</style>

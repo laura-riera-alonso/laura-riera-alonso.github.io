@@ -1,0 +1,57 @@
+---
+import Waffle from "../charts/Waffle.astro";
+import Icon from "../Icon.astro";
+import { home } from "../../i18n/home";
+import { pathFor, type Lang } from "../../lib/i18n";
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = home[lang].result;
+const more = lang === "es" ? "Cómo se llegó a este resultado" : "How we got to this result";
+---
+
+<section class="band" aria-labelledby="result-title">
+  <div class="container-page inner">
+    <header class="head">
+      <h2 id="result-title" class="reveal">{t.title}</h2>
+      <p class="reveal" style="--d: 1">{t.sub}</p>
+      <a class="link-arrow reveal" style="--d: 2" href={pathFor("tfm", lang)}>
+        {more}
+        <Icon name="arrow-right" size={18} class="link-arrow-icon" />
+      </a>
+    </header>
+    <Waffle lang={lang} />
+  </div>
+</section>
+
+<style>
+  .band {
+    background: var(--bg-2);
+  }
+  .inner {
+    display: grid;
+    gap: clamp(2.5rem, 5vw, 3.5rem);
+    padding-block: clamp(4rem, 9vw, 7rem);
+  }
+  .head {
+    display: grid;
+    gap: 1rem;
+    justify-items: start;
+  }
+  h2 {
+    margin: 0;
+    max-width: 18ch;
+    font-size: clamp(2rem, 1.3rem + 2.6vw, 3.25rem);
+    font-weight: 620;
+    letter-spacing: -0.032em;
+  }
+  p {
+    margin: 0;
+    max-width: 56ch;
+    font-size: 1.125rem;
+    color: var(--ink-2);
+  }
+</style>

@@ -1,0 +1,74 @@
+---
+import Icon from "../Icon.astro";
+import { ui } from "../../i18n/ui";
+import { home } from "../../i18n/home";
+import { pathFor, type Lang } from "../../lib/i18n";
+
+interface Props {
+  lang: Lang;
+  next: "tfm" | "tfg" | "abbvie";
+}
+
+const { lang, next } = Astro.props;
+const u = ui[lang];
+const project = home[lang].projects[next];
+---
+
+<nav class="container-page next" aria-label={u.nextProject}>
+  <a class="card" href={pathFor(next, lang)}>
+    <span class="meta">{u.nextProject}</span>
+    <span class="title">{project.title}</span>
+    <span class="label">{project.label}</span>
+    <Icon name="arrow-right" size={28} class="go" />
+  </a>
+  <a class="link-arrow all" href={pathFor("home", lang, "#projects")}>{u.backToProjects}</a>
+</nav>
+
+<style>
+  .next {
+    display: grid;
+    gap: 1.5rem;
+    padding-block: clamp(3.5rem, 7vw, 5.5rem);
+    border-top: 1px solid var(--line);
+  }
+  .card {
+    position: relative;
+    display: grid;
+    gap: 0.5rem;
+    padding: clamp(1.5rem, 4vw, 2.5rem) clamp(4rem, 8vw, 6rem) clamp(1.5rem, 4vw, 2.5rem) clamp(1.5rem, 4vw, 2.5rem);
+    border-radius: var(--radius);
+    background: var(--bg-2);
+    text-decoration: none;
+    transition: transform 160ms var(--ease-out), background-color 200ms var(--ease-out);
+  }
+  .card:active {
+    transform: scale(0.99);
+  }
+  .title {
+    max-width: 26ch;
+    font-size: clamp(1.5rem, 1.1rem + 1.6vw, 2.5rem);
+    font-weight: 620;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+  }
+  .label {
+    color: var(--ink-2);
+    font-size: 0.9375rem;
+  }
+  .card :global(.go) {
+    position: absolute;
+    right: clamp(1.5rem, 4vw, 2.5rem);
+    top: 50%;
+    margin-top: -14px;
+    color: var(--accent-ink);
+    transition: transform 220ms var(--ease-out);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .card:hover {
+      background: color-mix(in oklch, var(--bg-2), var(--ink) 4%);
+    }
+    .card:hover :global(.go) {
+      transform: translateX(4px);
+    }
+  }
+</style>

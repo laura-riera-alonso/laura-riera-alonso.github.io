@@ -1,0 +1,108 @@
+---
+import { home } from "../../i18n/home";
+import { skillGroups, extraSkills } from "../../data/perfil";
+import type { Lang } from "../../lib/i18n";
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = home[lang].about;
+const groups = skillGroups.map((g) => ({ ...g, items: [...g.items, ...(extraSkills[g.id] ?? [])] }));
+---
+
+<section class="container-page about" aria-labelledby="about-title">
+  <h2 id="about-title" class="title reveal">{t.title}</h2>
+  <div class="body">
+    <p class="lead reveal" style="--d: 1">{t.lead}</p>
+    <h3 class="skills-title reveal" style="--d: 2">{t.skillsTitle}</h3>
+    <div class="groups">
+      {
+        groups.map((group, i) => (
+          <div class="group reveal" style={`--d: ${i + 2}`}>
+            <h4>{group.title[lang]}</h4>
+            <ul>
+              {group.items.map((item) => (
+                <li>{item[lang]}</li>
+              ))}
+            </ul>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .about {
+    display: grid;
+    gap: 1.5rem;
+    padding-block: clamp(4rem, 9vw, 7rem);
+    border-top: 1px solid var(--line);
+  }
+  .title {
+    margin: 0;
+    font-size: clamp(1.75rem, 1.2rem + 1.8vw, 2.5rem);
+    font-weight: 600;
+    max-width: 14ch;
+  }
+  .lead {
+    margin: 0;
+    max-width: 44ch;
+    font-size: clamp(1.25rem, 1rem + 0.9vw, 1.625rem);
+    line-height: 1.42;
+    letter-spacing: -0.012em;
+    color: var(--ink);
+  }
+  .skills-title {
+    margin: clamp(2.5rem, 5vw, 3.5rem) 0 1.25rem;
+    font-size: 0.875rem;
+    font-weight: 550;
+    letter-spacing: 0;
+    color: var(--ink-3);
+  }
+  .groups {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+    gap: 2rem 2.5rem;
+  }
+  .group {
+    padding-top: 1rem;
+    border-top: 1px solid var(--line);
+  }
+  h4 {
+    margin: 0 0 0.875rem;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  li {
+    padding: 0.3125rem 0.75rem;
+    border-radius: 999px;
+    background: var(--bg-2);
+    color: var(--ink-2);
+    font-size: 0.875rem;
+    line-height: 1.35;
+  }
+  @media (min-width: 1024px) {
+    .about {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: 32px;
+    }
+    .title {
+      grid-column: 1 / span 4;
+    }
+    .body {
+      grid-column: 5 / span 8;
+    }
+  }
+</style>

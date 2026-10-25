@@ -1,0 +1,219 @@
+---
+import { Image } from "astro:assets";
+import Base from "../layouts/Base.astro";
+import CaseHeader from "../components/case/CaseHeader.astro";
+import Section from "../components/case/Section.astro";
+import Flow from "../components/case/Flow.astro";
+import Bullets from "../components/case/Bullets.astro";
+import CodeLinks from "../components/case/CodeLinks.astro";
+import NextProject from "../components/case/NextProject.astro";
+import ModelTable from "../components/charts/ModelTable.astro";
+import Waffle from "../components/charts/Waffle.astro";
+import { tfm } from "../i18n/tfm";
+import { tfmCohort } from "../data/resultados";
+import { num, type Lang } from "../lib/i18n";
+import simulation from "../assets/tfm/SimulacionClinica.png";
+import summary from "../assets/tfm/Resumen.png";
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = tfm[lang];
+---
+
+<Base lang={lang} page="tfm" title={t.meta.title} description={t.meta.description}>
+  <CaseHeader lang={lang} kicker={t.kicker} title={t.title} lead={t.lead} role={t.role} facts={t.facts}>
+    <figure class="hero-fig">
+      <div class="frame">
+        <Image
+          src={simulation}
+          alt={t.heroAlt}
+          widths={[640, 960, 1272]}
+          sizes="(min-width: 1240px) 1144px, 100vw"
+          loading="eager"
+          fetchpriority="high"
+          class="vt-tfm"
+        />
+      </div>
+      <figcaption class="meta">{t.heroCaption}</figcaption>
+    </figure>
+  </CaseHeader>
+
+  <Section id="flow" title={t.flow.title} sub={t.flow.sub}>
+    <Flow steps={t.flow.steps} label={t.flow.title} />
+  </Section>
+
+  <Section id="cohort" title={t.cohort.title} layout="split">
+    <div class="funnel">
+      <p class="count reveal">
+        <strong>{num(tfmCohort.start, lang)}</strong>
+        <span>{t.cohort.start}</span>
+      </p>
+      <ul class="criteria">
+        {t.cohort.criteria.map((c, i) => <li class="reveal" style={`--d: ${i}`}>{c}</li>)}
+      </ul>
+      <p class="count final reveal">
+        <strong>{num(tfmCohort.final, lang)}</strong>
+        <span>{t.cohort.end}</span>
+      </p>
+      <p class="split-note">{t.cohort.split}</p>
+    </div>
+  </Section>
+
+  <Section id="sources" title={t.sources.title} tint>
+    <dl class="sources">
+      {
+        t.sources.items.map((s, i) => (
+          <div class="source reveal" style={`--d: ${i}`}>
+            <dt>{s.k}</dt>
+            <dd>{s.v}</dd>
+          </div>
+        ))
+      }
+    </dl>
+    <p class="after">{t.sources.note}</p>
+  </Section>
+
+  <Section id="models" title={t.models.title} sub={t.models.body}>
+    <ModelTable lang={lang} caption={t.models.caption} cols={t.models.cols} />
+    <p class="after">{t.models.vars}</p>
+    <p class="after muted">{t.models.rNote}</p>
+  </Section>
+
+  <Section id="impact" title={t.impact.title} sub={t.impact.body} tint>
+    <Waffle lang={lang} />
+  </Section>
+
+  <Section id="dashboard" title={t.dashboard.title} sub={t.dashboard.body}>
+    <figure class="dash reveal">
+      <div class="frame">
+        <Image src={summary} alt={t.dashboard.alt} widths={[640, 960, 1287]} sizes="(min-width: 1240px) 1144px, 100vw" />
+      </div>
+      <figcaption class="meta">{t.dashboard.caption}</figcaption>
+    </figure>
+  </Section>
+
+  <section class="container-page pair" aria-label={`${t.privacy.title}. ${t.limits.title}`}>
+    <div class="reveal">
+      <h2>{t.privacy.title}</h2>
+      <Bullets items={t.privacy.items} />
+    </div>
+    <div class="reveal" style="--d: 1">
+      <h2>{t.limits.title}</h2>
+      <Bullets items={t.limits.items} />
+    </div>
+  </section>
+
+  <Section id="code" title={t.code.title} layout="split">
+    <CodeLinks lang={lang} links={t.code.links} />
+  </Section>
+
+  <NextProject lang={lang} next="tfg" />
+</Base>
+
+<style>
+  .hero-fig {
+    margin: clamp(2.5rem, 5vw, 4rem) 0 0;
+  }
+  .hero-fig figcaption,
+  .dash figcaption {
+    margin-top: 0.75rem;
+  }
+  .dash {
+    margin: 0;
+  }
+  .vt-tfm {
+    view-transition-name: tfm-visual;
+  }
+  .funnel {
+    display: grid;
+    gap: 1.5rem;
+  }
+  .count {
+    display: grid;
+    gap: 0.25rem;
+    margin: 0;
+  }
+  .count strong {
+    font-size: clamp(2.5rem, 1.6rem + 3vw, 4rem);
+    font-weight: 620;
+    letter-spacing: -0.035em;
+    line-height: 1;
+  }
+  .count span {
+    color: var(--ink-2);
+  }
+  .count.final strong {
+    color: var(--accent-ink);
+  }
+  .criteria {
+    display: grid;
+    gap: 0.75rem;
+    list-style: none;
+    margin: 0;
+    padding: 0 0 0 1.5rem;
+    border-left: 1px solid var(--line-strong);
+    max-width: 62ch;
+  }
+  .criteria li {
+    color: var(--ink-2);
+  }
+  .split-note {
+    margin: 0;
+    font-size: 0.9375rem;
+    color: var(--ink-3);
+  }
+  .sources {
+    display: grid;
+    gap: clamp(1.5rem, 3vw, 2.25rem) 32px;
+    margin: 0;
+  }
+  .source {
+    display: grid;
+    gap: 0.375rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--line-strong);
+  }
+  .source dt {
+    font-weight: 600;
+  }
+  .source dd {
+    margin: 0;
+    color: var(--ink-2);
+    max-width: 52ch;
+  }
+  .after {
+    margin: 1.5rem 0 0;
+    max-width: 66ch;
+  }
+  .muted {
+    margin-top: 0.5rem;
+    font-size: 0.9375rem;
+    color: var(--ink-3);
+  }
+  .pair {
+    display: grid;
+    gap: 3rem;
+    padding-block: clamp(3.5rem, 7vw, 5.5rem);
+    border-top: 1px solid var(--line);
+  }
+  .pair h2 {
+    margin: 0 0 1.25rem;
+    font-size: clamp(1.375rem, 1.1rem + 0.9vw, 1.75rem);
+    font-weight: 600;
+    letter-spacing: -0.022em;
+  }
+  @media (min-width: 768px) {
+    .sources {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  @media (min-width: 1024px) {
+    .pair {
+      grid-template-columns: 1fr 1fr;
+      column-gap: 64px;
+    }
+  }
+</style>

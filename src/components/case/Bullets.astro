@@ -1,0 +1,33 @@
+---
+interface Props {
+  items: string[];
+  ordered?: boolean;
+}
+
+const { items, ordered = false } = Astro.props;
+const Tag = ordered ? "ol" : "ul";
+---
+
+<Tag class:list={["bullets", { ordered }]}>
+  {items.map((item) => <li>{item}</li>)}
+</Tag>
+
+<style>
+  .bullets {
+    display: grid;
+    gap: 0.875rem;
+    margin: 0;
+    padding-left: 1.25rem;
+    max-width: 66ch;
+  }
+  li {
+    padding-left: 0.25rem;
+  }
+  li::marker {
+    color: var(--ink-3);
+  }
+  .ordered li::marker {
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+  }
+</style>

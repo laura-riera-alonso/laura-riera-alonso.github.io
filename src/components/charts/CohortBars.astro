@@ -1,0 +1,104 @@
+---
+// Embudo de pacientes del TFG: barras proporcionales (una sola serie, un solo color).
+import { tfgCohort } from "../../data/resultados";
+import type { Lang } from "../../lib/i18n";
+
+interface Props {
+  lang: Lang;
+  title: string;
+  steps: { label: string; note: string }[];
+}
+
+const { lang, title, steps } = Astro.props;
+const values = [tfgCohort.initial, tfgCohort.afterQc, tfgCohort.used];
+const unit = lang === "es" ? "pacientes" : "patients";
+---
+
+<figure class="cohort">
+  <figcaption>{title}</figcaption>
+  <ol>
+    {
+      steps.map((step, i) => (
+        <li class="reveal" style={`--d: ${i}`}>
+          <span class="head">
+            <span class="label">{step.label}</span>
+            <span class="n">
+              <strong>{values[i]}</strong> {unit}
+            </span>
+          </span>
+          <span class="bar" style={`--w: ${(values[i] / tfgCohort.initial) * 100}%`} aria-hidden="true" />
+          {step.note && <span class="note">{step.note}</span>}
+        </li>
+      ))
+    }
+  </ol>
+</figure>
+
+<style>
+  .cohort {
+    margin: 0;
+  }
+  figcaption {
+    margin-bottom: 1.25rem;
+    font-size: 0.875rem;
+    font-weight: 550;
+    color: var(--ink-2);
+  }
+  ol {
+    display: grid;
+    gap: 1.25rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  li {
+    display: grid;
+    gap: 0.5rem;
+  }
+  .head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+  }
+  .label {
+    font-weight: 500;
+  }
+  .n {
+    color: var(--ink-2);
+    font-size: 0.875rem;
+    white-space: nowrap;
+  }
+  .n strong {
+    font-size: 1.375rem;
+    font-weight: 620;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  .bar {
+    display: block;
+    width: var(--w);
+    height: 16px;
+    border-radius: 0 4px 4px 0;
+    background: var(--accent);
+    transform-origin: left center;
+  }
+  .note {
+    font-size: 0.8125rem;
+    color: var(--ink-3);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    :global(.js) li.reveal {
+      opacity: 1;
+      transform: none;
+    }
+    :global(.js) li .bar {
+      transform: scaleX(0.02);
+      transition: transform 900ms var(--ease-out-expo);
+      transition-delay: calc(var(--d, 0) * 120ms);
+    }
+    :global(.js) li.is-in .bar {
+      transform: none;
+    }
+  }
+</style>

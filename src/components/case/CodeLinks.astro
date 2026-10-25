@@ -1,0 +1,90 @@
+---
+import Icon from "../Icon.astro";
+import { profile, repoFile } from "../../data/perfil";
+import type { Lang } from "../../lib/i18n";
+
+interface Props {
+  lang: Lang;
+  links: { label: string; path: string }[];
+  note?: string;
+}
+
+const { lang, links, note } = Astro.props;
+const all = lang === "es" ? "Ver el repositorio completo" : "See the full repository";
+---
+
+<ul class="code">
+  {
+    links.map((link) => (
+      <li>
+        <a href={repoFile(link.path)}>
+          <span class="label">{link.label}</span>
+          <span class="path num">{link.path}</span>
+          <Icon name="arrow-up-right" size={18} class="go" />
+        </a>
+      </li>
+    ))
+  }
+</ul>
+{note && <p class="note">{note}</p>}
+<a class="link-arrow all" href={profile.repo}>
+  <Icon name="github-logo" size={18} />
+  {all}
+</a>
+
+<style>
+  .code {
+    display: grid;
+    gap: 0.75rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  a:not(.link-arrow) {
+    position: relative;
+    display: grid;
+    gap: 0.25rem;
+    padding: 1rem 3rem 1rem 1.25rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+    text-decoration: none;
+    transition: border-color 200ms var(--ease-out), transform 160ms var(--ease-out);
+  }
+  a:not(.link-arrow):active {
+    transform: scale(0.99);
+  }
+  .label {
+    font-weight: 550;
+  }
+  .path {
+    font-size: 0.8125rem;
+    color: var(--ink-3);
+    overflow-wrap: anywhere;
+  }
+  a :global(.go) {
+    position: absolute;
+    right: 1.125rem;
+    top: 50%;
+    margin-top: -9px;
+    color: var(--ink-3);
+    transition: transform 200ms var(--ease-out), color 200ms var(--ease-out);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    a:not(.link-arrow):hover {
+      border-color: var(--line-strong);
+    }
+    a:not(.link-arrow):hover :global(.go) {
+      color: var(--accent-ink);
+      transform: translate(2px, -2px);
+    }
+  }
+  .note {
+    margin: 1rem 0 0;
+    font-size: 0.9375rem;
+    color: var(--ink-3);
+  }
+  .all {
+    margin-top: 1.5rem;
+  }
+</style>

@@ -1,0 +1,218 @@
+---
+import Base from "../layouts/Base.astro";
+import CaseHeader from "../components/case/CaseHeader.astro";
+import Section from "../components/case/Section.astro";
+import NextProject from "../components/case/NextProject.astro";
+import Icon from "../components/Icon.astro";
+import { abbvie } from "../i18n/abbvie";
+import { appFeatures } from "../data/abbvie";
+import type { Lang } from "../lib/i18n";
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = abbvie[lang];
+// La importación es una entrada, no algo que se gestione: se separa de la lista de módulos.
+const managed = appFeatures.filter((f) => f.kind === "managed");
+const sourceIcons = ["microsoft-excel-logo", "microsoft-outlook-logo"];
+---
+
+<Base lang={lang} page="abbvie" title={t.meta.title} description={t.meta.description}>
+  <CaseHeader lang={lang} kicker={t.kicker} title={t.title} lead={t.lead} role={t.role} facts={t.facts}>
+    <figure class="diagram rise-late" aria-label={t.flow.title}>
+      <figcaption class="diagram-title">{t.flow.title}</figcaption>
+      <div class="lanes">
+        <div class="lane">
+          <p class="lane-title meta">{t.flow.inputs}</p>
+          <ul class="nodes">
+            {
+              t.flow.sources.map((s, i) => (
+                <li class="node">
+                  <Icon name={sourceIcons[i]} size={22} />
+                  {s}
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+        <span class="link" aria-hidden="true" />
+        <div class="lane core">
+          <p class="lane-title meta">{t.flow.app}</p>
+          <div class="app">
+            <Icon name="database" size={28} />
+            <span class="app-name">{t.flow.appDetail}</span>
+          </div>
+        </div>
+        <span class="link" aria-hidden="true" />
+        <div class="lane">
+          <p class="lane-title meta">{t.flow.manages}</p>
+          <ul class="nodes managed">
+            {
+              managed.map((f) => (
+                <li class="node">
+                  <Icon name={f.icon} size={22} />
+                  {f.label[lang]}
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+      </div>
+      <p class="no-screens">{t.noScreens}</p>
+    </figure>
+  </CaseHeader>
+
+  <Section id="more" title={t.more.title}>
+    <ul class="more">
+      {
+        t.more.items.map((item, i) => (
+          <li class="reveal" style={`--d: ${i}`}>
+            <h3>{item.title}</h3>
+            <p>{item.body}</p>
+          </li>
+        ))
+      }
+    </ul>
+  </Section>
+
+  <NextProject lang={lang} next="tfm" />
+</Base>
+
+<style>
+  .diagram {
+    margin: clamp(3rem, 6vw, 4.5rem) 0 0;
+    padding: clamp(1.5rem, 4vw, 2.5rem);
+    border-radius: var(--radius);
+    background: var(--bg-2);
+  }
+  .diagram-title {
+    margin-bottom: 1.5rem;
+    font-size: clamp(1.25rem, 1.05rem + 0.7vw, 1.5rem);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+  .lanes {
+    display: grid;
+    gap: 0;
+  }
+  .lane-title {
+    margin: 0 0 0.75rem;
+  }
+  .nodes {
+    display: grid;
+    gap: 0.5rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .node {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 48px;
+    padding: 0.625rem 0.875rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+    font-size: 0.9375rem;
+    line-height: 1.3;
+  }
+  .node :global(.icon) {
+    flex: none;
+    color: var(--ink-2);
+  }
+  .app {
+    display: grid;
+    justify-items: start;
+    gap: 0.75rem;
+    padding: 1.5rem;
+    border-radius: var(--radius);
+    background: var(--accent);
+    color: var(--on-accent);
+  }
+  .app-name {
+    font-size: 1.125rem;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+  /* Conector entre carriles: vertical en móvil, horizontal en escritorio. */
+  .link {
+    justify-self: center;
+    width: 1px;
+    height: 2rem;
+    margin-block: 0.5rem;
+    background: var(--line-strong);
+  }
+  .no-screens {
+    margin: 2rem 0 0;
+    max-width: 60ch;
+    font-size: 0.9375rem;
+    color: var(--ink-2);
+  }
+  .more {
+    display: grid;
+    gap: 0;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .more li {
+    display: grid;
+    gap: 0.5rem;
+    padding-block: 1.75rem;
+    border-top: 1px solid var(--line);
+  }
+  .more h3 {
+    margin: 0;
+    font-size: clamp(1.25rem, 1rem + 0.9vw, 1.625rem);
+    font-weight: 560;
+    letter-spacing: -0.022em;
+    line-height: 1.2;
+  }
+  .more p {
+    margin: 0;
+    max-width: 62ch;
+    color: var(--ink-2);
+  }
+  @media (min-width: 1024px) {
+    .lanes {
+      grid-template-columns: minmax(0, 1fr) 48px minmax(0, 1.1fr) 48px minmax(0, 1.4fr);
+      align-items: start;
+    }
+    /* El conector cae a la altura del primer nodo de cada carril (título + medio nodo). */
+    .link {
+      width: 100%;
+      height: 1px;
+      margin: calc(1.4rem + 24px) 0 0;
+    }
+    .managed {
+      grid-template-columns: 1fr 1fr;
+    }
+    .more li {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: 32px;
+      align-items: baseline;
+    }
+    .more h3 {
+      grid-column: 1 / span 5;
+    }
+    .more p {
+      grid-column: 7 / span 6;
+    }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .rise-late {
+      animation: rise 800ms var(--ease-out-expo) both;
+      animation-delay: 380ms;
+    }
+    @keyframes rise {
+      from {
+        opacity: 0;
+        transform: translateY(14px);
+      }
+    }
+  }
+</style>

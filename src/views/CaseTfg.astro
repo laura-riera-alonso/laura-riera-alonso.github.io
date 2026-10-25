@@ -1,0 +1,273 @@
+---
+import Base from "../layouts/Base.astro";
+import CaseHeader from "../components/case/CaseHeader.astro";
+import Section from "../components/case/Section.astro";
+import Flow from "../components/case/Flow.astro";
+import Bullets from "../components/case/Bullets.astro";
+import CodeLinks from "../components/case/CodeLinks.astro";
+import NextProject from "../components/case/NextProject.astro";
+import MetricDots from "../components/charts/MetricDots.astro";
+import CohortBars from "../components/charts/CohortBars.astro";
+import { tfg } from "../i18n/tfg";
+import { ui } from "../i18n/ui";
+import { tfgModels } from "../data/resultados";
+import Icon from "../components/Icon.astro";
+import { num, type Lang } from "../lib/i18n";
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = tfg[lang];
+const u = ui[lang];
+const targetName: Record<string, string> =
+  lang === "es"
+    ? { t1c: "T1 con contraste", t1sub: "T1-SUB, pintado", "t1sub-post": "T1-SUB, pintado y postprocesado" }
+    : { t1c: "Contrast T1", t1sub: "T1-SUB, inpainted", "t1sub-post": "T1-SUB, inpainted and post-processed" };
+const chosenLabel = lang === "es" ? "elegido" : "chosen";
+---
+
+<Base lang={lang} page="tfg" title={t.meta.title} description={t.meta.description}>
+  <CaseHeader lang={lang} kicker={t.kicker} title={t.title} lead={t.lead} role={t.role} facts={t.facts}>
+    <div class="hero-flow">
+      <h2 class="flow-title">{t.flow.title}</h2>
+      <p class="flow-sub">{t.flow.sub}</p>
+      <Flow steps={t.flow.steps} label={t.flow.title} />
+    </div>
+  </CaseHeader>
+
+  <Section id="data" title={t.data.title} layout="split" tint>
+    <p class="body-lg">{t.data.body}</p>
+    <p class="callout">{t.data.noImages}</p>
+    <div class="cohort">
+      <CohortBars lang={lang} title={t.data.cohortTitle} steps={t.data.cohort} />
+    </div>
+  </Section>
+
+  <Section id="prep" title={t.prep.title} sub={t.prep.sub} layout="split">
+    <Bullets items={t.prep.steps} ordered />
+    <p class="after">{t.prep.organise}</p>
+  </Section>
+
+  <Section id="model" title={t.model.title} layout="split">
+    <Bullets items={t.model.items} />
+  </Section>
+
+  <Section id="results" title={t.results.title} sub={t.results.sub} tint>
+    <div class="charts">
+      <MetricDots lang={lang} metric="ssim" title={t.results.ssim} />
+      <MetricDots lang={lang} metric="psnr" title={t.results.psnr} />
+    </div>
+    <details class="data">
+      <summary>
+        {u.showTable}
+        <span class="caret" aria-hidden="true"><Icon name="caret-down" size={18} /></span>
+      </summary>
+      <div class="table-wrap" tabindex="0" role="region" aria-label={t.results.title}>
+        <table>
+          <caption class="sr-only">{t.results.title}</caption>
+          <thead>
+            <tr>
+              <th scope="col">{t.results.table.exp}</th>
+              <th scope="col">{t.results.table.target}</th>
+              <th scope="col">{t.results.table.loss}</th>
+              <th scope="col">SSIM (%)</th>
+              <th scope="col">PSNR (dB)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              tfgModels.map((m) => (
+                <tr class:list={{ chosen: m.chosen }}>
+                  <td>{m.exp}</td>
+                  <td>{targetName[m.target]}</td>
+                  <th scope="row">
+                    {m.loss}
+                    {m.chosen && <span class="tag">{chosenLabel}</span>}
+                  </th>
+                  <td>{num(m.ssim.mean, lang, 2)} ± {num(m.ssim.sd, lang, 2)}</td>
+                  <td>{num(m.psnr.mean, lang, 2)} ± {num(m.psnr.sd, lang, 2)}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+    </details>
+  </Section>
+
+  <section class="container-page decision" aria-labelledby="decision-title">
+    <h2 id="decision-title" class="reveal">{t.decision.title}</h2>
+    <ol class="reasons">
+      {t.decision.items.map((item, i) => <li class="reveal" style={`--d: ${i}`}>{item}</li>)}
+    </ol>
+    <p class="verdict reveal">{t.decision.verdict}</p>
+  </section>
+
+  <Section id="limits" title={t.limits.title} layout="split">
+    <Bullets items={t.limits.items} />
+  </Section>
+
+  <Section id="code" title={t.code.title} layout="split">
+    <CodeLinks lang={lang} links={t.code.links} />
+  </Section>
+
+  <NextProject lang={lang} next="abbvie" />
+</Base>
+
+<style>
+  .hero-flow {
+    margin-top: clamp(3rem, 6vw, 4.5rem);
+  }
+  .flow-title {
+    margin: 0;
+    font-size: clamp(1.375rem, 1.1rem + 0.9vw, 1.75rem);
+    font-weight: 600;
+    letter-spacing: -0.022em;
+  }
+  .flow-sub {
+    margin: 0.5rem 0 1.75rem;
+    color: var(--ink-2);
+  }
+  .body-lg {
+    margin: 0;
+    max-width: 60ch;
+    font-size: 1.125rem;
+  }
+  .callout {
+    margin: 1.5rem 0 0;
+    max-width: 60ch;
+    padding: 1rem 1.25rem;
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--ink-2);
+  }
+  .cohort {
+    margin-top: 2.5rem;
+    max-width: 640px;
+  }
+  .after {
+    margin: 1.5rem 0 0;
+    max-width: 66ch;
+    color: var(--ink-2);
+  }
+  .charts {
+    display: grid;
+    gap: 3rem;
+  }
+  @media (min-width: 1024px) {
+    .charts {
+      grid-template-columns: 1.35fr 1fr;
+      gap: 48px;
+    }
+    .charts :global(.dots:nth-child(2) .name) {
+      display: none;
+    }
+    .charts :global(.dots:nth-child(2) .row),
+    .charts :global(.dots:nth-child(2) .axis) {
+      grid-template-columns: minmax(0, 1fr) var(--val-w);
+    }
+  }
+  .data {
+    margin-top: 2rem;
+  }
+  summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 44px;
+    cursor: pointer;
+    color: var(--accent-ink);
+    font-weight: 550;
+    list-style: none;
+  }
+  summary::-webkit-details-marker {
+    display: none;
+  }
+  .caret {
+    display: inline-flex;
+    transition: transform 200ms var(--ease-out);
+  }
+  details[open] > summary .caret {
+    transform: rotate(180deg);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .caret {
+      transition: none;
+    }
+  }
+  .table-wrap {
+    overflow-x: auto;
+  }
+  table {
+    min-width: 560px;
+    border-collapse: collapse;
+    margin-top: 0.5rem;
+    font-size: 0.9375rem;
+    font-variant-numeric: tabular-nums;
+  }
+  th,
+  td {
+    text-align: left;
+    padding: 0.625rem 1.25rem 0.625rem 0;
+  }
+  tbody tr + tr > * {
+    border-top: 1px solid var(--line);
+  }
+  thead th {
+    font-weight: 500;
+    font-size: 0.8125rem;
+    color: var(--ink-3);
+    border-bottom: 1px solid var(--line-strong);
+  }
+  tbody th {
+    font-weight: 450;
+  }
+  .chosen > * {
+    font-weight: 600;
+  }
+  .tag {
+    display: inline-block;
+    margin-left: 0.5rem;
+    padding: 0.125rem 0.5rem;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+    font-size: 0.75rem;
+    font-weight: 550;
+    vertical-align: 1px;
+  }
+  .decision {
+    padding-block: clamp(4rem, 8vw, 6.5rem);
+    border-top: 1px solid var(--line);
+  }
+  .decision h2 {
+    margin: 0 0 clamp(2rem, 4vw, 3rem);
+    max-width: 18ch;
+    font-size: clamp(2rem, 1.3rem + 2.6vw, 3.25rem);
+    font-weight: 620;
+    letter-spacing: -0.032em;
+  }
+  .reasons {
+    display: grid;
+    gap: 1.5rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .reasons li {
+    max-width: 68ch;
+    font-size: 1.125rem;
+    line-height: 1.55;
+  }
+  .verdict {
+    margin: clamp(2.5rem, 5vw, 3.5rem) 0 0;
+    max-width: 40ch;
+    font-size: clamp(1.25rem, 1rem + 1vw, 1.75rem);
+    font-weight: 550;
+    line-height: 1.35;
+    letter-spacing: -0.015em;
+    color: var(--accent-ink);
+  }
+</style>

@@ -1,0 +1,179 @@
+---
+// Tabla de modelos del TFM con una barra fina por métrica (sin pista de fondo). Es a la vez el gráfico y su
+// vista en tabla. Escala común 0-1 para las cuatro métricas. Lleva roles ARIA explícitos porque en móvil la
+// tabla pasa a display: block y, sin ellos, perdería su semántica.
+import { tfmModels } from "../../data/resultados";
+import { num, type Lang } from "../../lib/i18n";
+
+interface Props {
+  lang: Lang;
+  caption: string;
+  cols: { model: string; auc: string; sens: string; spec: string; f1: string };
+}
+
+const { lang, caption, cols } = Astro.props;
+const metrics = ["auc", "sens", "spec", "f1"] as const;
+const chosenLabel = lang === "es" ? "elegido" : "chosen";
+---
+
+<div class="wrap">
+  <table class="models" role="table">
+    <caption>{caption}</caption>
+    <thead role="rowgroup">
+      <tr role="row">
+        <th scope="col" role="columnheader">{cols.model}</th>
+        {metrics.map((m) => <th scope="col" role="columnheader">{cols[m]}</th>)}
+      </tr>
+    </thead>
+    <tbody role="rowgroup">
+      {
+        tfmModels.map((model) => (
+          <tr role="row" class:list={{ chosen: model.chosen }}>
+            <th scope="row" role="rowheader">
+              {model.name[lang]}
+              {model.chosen && <span class="tag">{chosenLabel}</span>}
+            </th>
+            {metrics.map((m) => (
+              <td role="cell" data-label={cols[m]}>
+                <span class="value num">{num(model[m], lang, 3)}</span>
+                <span class="bar" style={`--v: ${model[m]}`} aria-hidden="true" />
+              </td>
+            ))}
+          </tr>
+        ))
+      }
+    </tbody>
+  </table>
+</div>
+
+<style>
+  .wrap {
+    overflow-x: auto;
+    margin-inline: -4px;
+    padding-inline: 4px;
+  }
+  .models {
+    width: 100%;
+    min-width: 600px;
+    table-layout: fixed;
+    border-collapse: collapse;
+    font-size: 0.9375rem;
+  }
+  caption {
+    caption-side: bottom;
+    text-align: left;
+    padding-top: 1rem;
+    font-size: 0.8125rem;
+    color: var(--ink-3);
+  }
+  th,
+  td {
+    text-align: left;
+    vertical-align: middle;
+    padding: 0.875rem 1rem 0.875rem 0;
+  }
+  thead th {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--ink-3);
+    border-bottom: 1px solid var(--line-strong);
+  }
+  tbody th {
+    font-weight: 450;
+    color: var(--ink-2);
+  }
+  thead th:first-child {
+    width: 32%;
+  }
+  tbody tr + tr > * {
+    border-top: 1px solid var(--line);
+  }
+  .chosen th {
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .tag {
+    display: inline-block;
+    margin-left: 0.5rem;
+    padding: 0.125rem 0.5rem;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+    font-size: 0.75rem;
+    font-weight: 550;
+    vertical-align: 1px;
+  }
+  .value {
+    display: block;
+    font-variant-numeric: tabular-nums;
+    font-size: 0.875rem;
+  }
+  .bar {
+    display: block;
+    width: calc(var(--v) * 100%);
+    max-width: 100%;
+    height: 4px;
+    margin-top: 0.375rem;
+    border-radius: 0 2px 2px 0;
+    background: var(--ink-3);
+    opacity: 0.55;
+  }
+  .chosen .bar {
+    background: var(--accent);
+    opacity: 1;
+  }
+  .chosen .value {
+    font-weight: 600;
+  }
+  /* En móvil, una ficha por modelo con sus cuatro métricas en rejilla. */
+  @media (max-width: 639px) {
+    .models {
+      min-width: 0;
+    }
+    .models,
+    tbody,
+    tr {
+      display: block;
+    }
+    thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+    }
+    caption {
+      display: block;
+      padding: 0 0 1rem;
+    }
+    tbody tr {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap: 1.25rem;
+      padding-block: 1rem;
+    }
+    tbody tr + tr {
+      border-top: 1px solid var(--line);
+    }
+    tbody tr + tr > * {
+      border-top: 0;
+    }
+    tbody th {
+      grid-column: 1 / -1;
+      padding: 0 0 0.5rem;
+    }
+    td {
+      display: block;
+      padding: 0.375rem 0;
+    }
+    td::before {
+      content: attr(data-label);
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--ink-3);
+      margin-bottom: 0.125rem;
+    }
+  }
+</style>
